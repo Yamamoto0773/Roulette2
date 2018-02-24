@@ -132,15 +132,19 @@ BOOL CGame::Init(HINSTANCE hinst) {
 	int grade, mag;
 	while (fgets(tmp, 128, fp) != NULL) {
 		i=0, grade=0, mag=0;
-		if (tmp[i] < '1' || tmp[i] > '5') {
+		
+		while (tmp[i] >= '0' && tmp[i] <= '9') {
+			grade *= 10;
+			grade += tmp[i]-'0';
+			i++;
+		}
+
+		if (grade < 1 || grade > 10) {
 			DEBUG("範囲外の学年の確率を指定しました");
 			return FALSE;
 		}
 
-		grade = tmp[i] - '0';
-
-		i++;
-		while (tmp[i] == ' ') i++;	// 空白飛ばす
+		while (tmp[i] == ' ' || tmp[i] == ',' || tmp[i] == '\t') i++;	// 区切り文字は飛ばす
 
 		while (tmp[i] >= '0' && tmp[i] <= '9') {
 			mag *= 10;
@@ -334,7 +338,6 @@ BOOL CGame::RunRoulette() {
 		else {
 			// ルーレット停止中
 			if (iWiningRoom == 0) {
-				// くじがなくなったとき
 				dt.Draw(textX-width*i, textY, 300, 0, 0xff000000, "-");
 			}
 			else {
@@ -364,12 +367,21 @@ BOOL CGame::RunRoulette() {
 BOOL CGame::SetNumber(int mode) {
 	// 当選番号取得
 	
-	const RoomNum *wining = lottery.getNumber(mode);
+	RoomNum room;
+	if (!lottery.getNumber(room, mode)) {
+		return false;
+	}
 
-	iWiningRoom = wining->number;
-	iWiningRoomid = wining->id;
+	iWiningRoom = room.number;
+	iWiningRoomid = room.id;
 
-	return TRUE;
+	DEBUG("Room No.%4d", iWiningRoom);
+	if (iWiningRoomid == 0) {
+		DEBUG(" (%d)", iWiningRoomid);
+	}
+	DEBUG("\n");
+
+	return true;
 }
 
 

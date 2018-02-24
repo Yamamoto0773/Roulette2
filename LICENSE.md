@@ -1,5 +1,5 @@
 
-Copyright (c) 2017, Nanami Yamamoto
+Copyright (c) 2018, Nanami Yamamoto
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -16,10 +16,6 @@
 #include "Lottery.hpp"
 
 
-
-#define MAXKEYCNT 11
-
-
 // ステート
 enum STATE {
 	INIT=0,			// ゲーム初期化
@@ -27,12 +23,6 @@ enum STATE {
 	END				// 全てのゲーム終了処理
 };
 
-
-enum SETNUMBER {
-	NONE,
-	GIRL,
-	BOY
-};
 
 class CGame {
 	// ライブラリなど
@@ -58,7 +48,7 @@ class CGame {
 	int				iRouletteState;		// ルーレットの各桁の状態
 
 	// 入力状態
-	BOOL			bOnKey[MAXKEYCNT];	// キーが押されているか
+	BOOL			bOnKey[16];	// キーが押されているか
 
 private:
 	// 初期化

@@ -22,7 +22,7 @@ CGame::CGame() {
 	iRouletteState	= 0b0000;
 
 	iWiningRoom		= 0;
-	iWiningRoomid		= 0;
+	iWiningRoomid	= 0;
 
 	ZeroMemory(&bOnKey, sizeof(bOnKey));
 }
@@ -188,15 +188,16 @@ BOOL CGame::RunRoulette() {
 		return -1;
 
 	// 仮想入力ハードウェア
-	BOOL press[MAXKEYCNT];						// 押した瞬間にtrueになる配列
+	BOOL press[16];						// 押した瞬間にtrueになる配列
 	ZeroMemory(&press, sizeof(press));
 
 	// キーボードの処理
-	static const int KEYID[MAXKEYCNT] ={		// キーのリスト
-		DIK_SPACE, DIK_C, DIK_V, DIK_B, DIK_N, DIK_RETURN, DIK_1, DIK_2, DIK_3,DIK_4,DIK_5
+	static const int KEYID[16] ={		// キーのリスト
+		DIK_SPACE, DIK_C, DIK_V, DIK_B, DIK_N, DIK_RETURN, DIK_1, DIK_2, DIK_3,DIK_4,DIK_5,
+		DIK_6, DIK_7, DIK_8, DIK_9, DIK_0
 	};
 
-	for (int i=0; i<MAXKEYCNT; i++) {
+	for (int i=0; i<16; i++) {
 		if ((key[KEYID[i]]&0x80)) {
 			// キーボード入力があった場合
 			if (!bOnKey[i]) {
@@ -219,50 +220,24 @@ BOOL CGame::RunRoulette() {
 		// スペースキーでルーレット停止
 		iRouletteState &= 0b0000;
 	}
-	if (press[5]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート
-			if (SetNumber(0))
-				iRouletteState |= 0b1111;
+
+	// ルーレットスタート
+	int tmp = 0;
+	for (int i=0; i<11; i++) {
+		if (press[5+i]) {
+			tmp = 5+i;
+			break;
 		}
 	}
-	else if (press[6]) {
+	if (tmp > 0) {
 		if (iRouletteState == 0b0000) {
-			// ルーレットスタート
-			if (SetNumber(1))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[7]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(女子くじのみ
-			if (SetNumber(2))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[8]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(男子くじのみ
-			if (SetNumber(3))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[9]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(男子くじのみ
-			if (SetNumber(4))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[10]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(男子くじのみ
-			if (SetNumber(5))
+			if (SetNumber(tmp-5))
 				iRouletteState |= 0b1111;
 		}
 	}
 
 
+	// ルーレット停止
 	if (press[1]) {
 		iRouletteState &= 0b0111;
 	}

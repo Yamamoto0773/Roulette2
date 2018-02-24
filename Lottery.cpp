@@ -31,7 +31,7 @@ bool Lottery::setRoomNumber(const char * fileName) {
 	}
 
 	string tmp;
-	size_t num, grade;
+	size_t num, grade, id;
 	size_t i;
 	while (getline(ifs, tmp)) {
 		i = 0;
@@ -54,34 +54,36 @@ bool Lottery::setRoomNumber(const char * fileName) {
 
 		while (tmp[i] == ' ' || tmp[i] == ',' || tmp[i] == '\t') i++;	// 区切り文字は飛ばす
 
-		if (tmp[i] < '1' || tmp[i] > '9') {
-			return false;
+		id = 0;
+		while (tmp[i] >= '0' && tmp[i] <= '9') {	// 部屋番号取得
+			id *= 10;
+			id += tmp[i]-'0';
+			i++;
 		}
 
 		// 以下，正しいフォーマットの場合の処理
 
 		RoomNum add;
-		if (tmp[i] == '1') {	// 1人部屋
-			add.number = num;
+		add.number = num;
+
+		if (id == 1) {	// 一人部屋の場合
 			add.id = 0;
-
-			rooms[ tmp[0]-'0'-1 ].push_back(add);
+			rooms[grade-1].push_back(add);
 		}
-		else {					// 2人部屋
-			add.number = num;
-			add.id = 1;
-			rooms[ tmp[0]-'0'-1 ].push_back(add);
-			add.id = 2;
-			rooms[ tmp[0]-'0'-1 ].push_back(add);
+		else {
+			for (int i=0; i<id; i++) {
+				add.id = i+1;
+				rooms[grade-1].push_back(add);
+			}
 		}
 
 
-		if (magnif[tmp[0]-'0'-1] == 0) {
-			magnif[tmp[0]-'0'-1] = 1;	// 登録されたグループの倍率を1にする
+		if (magnif[grade-1] == 0) {
+			magnif[grade-1] = 1;	// 登録されたグループの倍率を1にする
 		}
 
-		if (tmp[0]-'0' > maxGrade) {
-			maxGrade = tmp[0]-'0';
+		if (grade > maxGrade) {
+			maxGrade = grade;
 		}
 
 		tmp.clear();

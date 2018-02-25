@@ -13,6 +13,7 @@
 #include "./libfiles/DXTextANSI.h"
 #include "./libfiles/Effect.hpp"
 #include "./libfiles/DirectXFigure.h"
+#include "./libfiles/CTimer.h"
 #include "Lottery.hpp"
 
 
@@ -32,7 +33,7 @@ class CGame {
 	DXTextANSI		dt;					// テキスト関連
 	DXTextANSI		dtsmall;
 	DirectXFigure	df;
-
+	
 	EffectManager	*ef;
 	
 	Lottery			lottery;

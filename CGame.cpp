@@ -84,7 +84,6 @@ BOOL CGame::Init(HINSTANCE hinst) {
 
 	ef = new EffectManager(&dd, (unsigned)windowW, (unsigned)windowH);
 
-
 	// 画像ファイル読み込み
 	char *filename[] ={
 		"resource/background.jpg",
@@ -114,7 +113,7 @@ BOOL CGame::Init(HINSTANCE hinst) {
 
 
 
-	// ファイル読み込み
+	// くじ定義ファイル読み込み
 	if (!lottery.setRoomNumber("DEFINE/RoomNumber.txt")) {
 		DEBUG("部屋番号の登録に失敗しました\n");
 		return FALSE;
@@ -369,54 +368,65 @@ BOOL CGame::Run(HINSTANCE hinst) {
 	// ゲームメインループ
 	MSG msg;
 	BOOL bLoop=TRUE;
+
+	CTimer timer;
+	timer.Start(60);	// 60fpsで実行
+
 	while (bLoop) {
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			if (msg.message==WM_QUIT) {
-				bLoop = FALSE;
-				DEBUG("WM_QUIT\n");
-				break;
+		int frame = timer.Run();
+		for (int i=0; i<frame; i++) {
+
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+				if (msg.message==WM_QUIT) {
+					bLoop = FALSE;
+					DEBUG("WM_QUIT\n");
+					break;
+				}
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
 			}
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
 
-		// メインゲーム処理分け
-		switch (eState) {
-			case INIT:
-				// 初期化
-				if (!Init(hinst)) {
-					// 失敗
-					eState = END;
-				}
-				else {
-					// 成功
-					eState = RUN;
-				}
-				break;
+		
 
-			case RUN:
-				switch (RunRoulette()) {
-					case 0:
-						eState = RUN;
-						break;
-					case -1:
+		
+			// メインゲーム処理分け
+			switch (eState) {
+				case INIT:
+					// 初期化
+					if (!Init(hinst)) {
+						// 失敗
 						eState = END;
-						break;
-				}
-				break;
+					}
+					else {
+						// 成功
+						eState = RUN;
+					}
+					break;
 
-			case END:
-				// 終了処理
-				Clear();
-				bLoop = FALSE;
-				break;
+				case RUN:
+					switch (RunRoulette()) {
+						case 0:
+							eState = RUN;
+							break;
+						case -1:
+							eState = END;
+							break;
+					}
+					break;
 
-			default:
-				// 未定義のステート
-				DEBUG("異常終了\n");
-				return FALSE;
+				case END:
+					// 終了処理
+					Clear();
+					bLoop = FALSE;
+					break;
+
+				default:
+					// 未定義のステート
+					DEBUG("異常終了\n");
+					return FALSE;
+			}
 		}
-		Sleep(0);
+		
 	}
 
 	win.Delete();

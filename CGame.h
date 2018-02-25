@@ -13,11 +13,8 @@
 #include "./libfiles/DXTextANSI.h"
 #include "./libfiles/Effect.hpp"
 #include "./libfiles/DirectXFigure.h"
+#include "./libfiles/CTimer.h"
 #include "Lottery.hpp"
-
-
-
-#define MAXKEYCNT 11
 
 
 // ステート
@@ -28,12 +25,6 @@ enum STATE {
 };
 
 
-enum SETNUMBER {
-	NONE,
-	GIRL,
-	BOY
-};
-
 class CGame {
 	// ライブラリなど
 	CWindow			win;				// ウインドウ管理
@@ -42,7 +33,7 @@ class CGame {
 	DXTextANSI		dt;					// テキスト関連
 	DXTextANSI		dtsmall;
 	DirectXFigure	df;
-
+	
 	EffectManager	*ef;
 	
 	Lottery			lottery;
@@ -58,7 +49,7 @@ class CGame {
 	int				iRouletteState;		// ルーレットの各桁の状態
 
 	// 入力状態
-	BOOL			bOnKey[MAXKEYCNT];	// キーが押されているか
+	BOOL			bOnKey[16];	// キーが押されているか
 
 private:
 	// 初期化

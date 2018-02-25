@@ -12,13 +12,14 @@ typedef struct _RoomNum {
 
 
 class Lottery {
+	static const size_t GRADE_CNT = 10;
+
 	std::vector<std::vector<RoomNum>> rooms;	// 部屋番号
 	std::vector<int> magnif;					// 当選倍率
 	
 	size_t sumMagnif;
 	
 	size_t maxGrade;
-	size_t gradeCnt;
 
 	std::mt19937 mt;
 
@@ -34,8 +35,10 @@ public:
 	bool setMagnification(size_t grade, size_t mag);
 
 	// 当選番号の取得
-	const RoomNum* getNumber(int grade);
-
-
+	bool getNumber(RoomNum& win);
+	bool getNumber(RoomNum& win, int grade);
+	
+private:
+	void clear();
 
 };

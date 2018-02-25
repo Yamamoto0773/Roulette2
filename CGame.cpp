@@ -22,7 +22,7 @@ CGame::CGame() {
 	iRouletteState	= 0b0000;
 
 	iWiningRoom		= 0;
-	iWiningRoomid		= 0;
+	iWiningRoomid	= 0;
 
 	ZeroMemory(&bOnKey, sizeof(bOnKey));
 }
@@ -84,7 +84,6 @@ BOOL CGame::Init(HINSTANCE hinst) {
 
 	ef = new EffectManager(&dd, (unsigned)windowW, (unsigned)windowH);
 
-
 	// 画像ファイル読み込み
 	char *filename[] ={
 		"resource/background.jpg",
@@ -114,7 +113,7 @@ BOOL CGame::Init(HINSTANCE hinst) {
 
 
 
-	// ファイル読み込み
+	// くじ定義ファイル読み込み
 	if (!lottery.setRoomNumber("DEFINE/RoomNumber.txt")) {
 		DEBUG("部屋番号の登録に失敗しました\n");
 		return FALSE;
@@ -132,15 +131,19 @@ BOOL CGame::Init(HINSTANCE hinst) {
 	int grade, mag;
 	while (fgets(tmp, 128, fp) != NULL) {
 		i=0, grade=0, mag=0;
-		if (tmp[i] < '1' || tmp[i] > '5') {
+		
+		while (tmp[i] >= '0' && tmp[i] <= '9') {
+			grade *= 10;
+			grade += tmp[i]-'0';
+			i++;
+		}
+
+		if (grade < 1 || grade > 10) {
 			DEBUG("範囲外の学年の確率を指定しました");
 			return FALSE;
 		}
 
-		grade = tmp[i] - '0';
-
-		i++;
-		while (tmp[i] == ' ') i++;	// 空白飛ばす
+		while (tmp[i] == ' ' || tmp[i] == ',' || tmp[i] == '\t') i++;	// 区切り文字は飛ばす
 
 		while (tmp[i] >= '0' && tmp[i] <= '9') {
 			mag *= 10;
@@ -184,15 +187,16 @@ BOOL CGame::RunRoulette() {
 		return -1;
 
 	// 仮想入力ハードウェア
-	BOOL press[MAXKEYCNT];						// 押した瞬間にtrueになる配列
+	BOOL press[16];						// 押した瞬間にtrueになる配列
 	ZeroMemory(&press, sizeof(press));
 
 	// キーボードの処理
-	static const int KEYID[MAXKEYCNT] ={		// キーのリスト
-		DIK_SPACE, DIK_C, DIK_V, DIK_B, DIK_N, DIK_RETURN, DIK_1, DIK_2, DIK_3,DIK_4,DIK_5
+	static const int KEYID[16] ={		// キーのリスト
+		DIK_SPACE, DIK_C, DIK_V, DIK_B, DIK_N, DIK_RETURN, DIK_1, DIK_2, DIK_3,DIK_4,DIK_5,
+		DIK_6, DIK_7, DIK_8, DIK_9, DIK_0
 	};
 
-	for (int i=0; i<MAXKEYCNT; i++) {
+	for (int i=0; i<16; i++) {
 		if ((key[KEYID[i]]&0x80)) {
 			// キーボード入力があった場合
 			if (!bOnKey[i]) {
@@ -215,50 +219,24 @@ BOOL CGame::RunRoulette() {
 		// スペースキーでルーレット停止
 		iRouletteState &= 0b0000;
 	}
-	if (press[5]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート
-			if (SetNumber(0))
-				iRouletteState |= 0b1111;
+
+	// ルーレットスタート
+	int tmp = 0;
+	for (int i=0; i<11; i++) {
+		if (press[5+i]) {
+			tmp = 5+i;
+			break;
 		}
 	}
-	else if (press[6]) {
+	if (tmp > 0) {
 		if (iRouletteState == 0b0000) {
-			// ルーレットスタート
-			if (SetNumber(1))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[7]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(女子くじのみ
-			if (SetNumber(2))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[8]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(男子くじのみ
-			if (SetNumber(3))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[9]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(男子くじのみ
-			if (SetNumber(4))
-				iRouletteState |= 0b1111;
-		}
-	}
-	else if (press[10]) {
-		if (iRouletteState == 0b0000) {
-			// ルーレットスタート　(男子くじのみ
-			if (SetNumber(5))
+			if (SetNumber(tmp-5))
 				iRouletteState |= 0b1111;
 		}
 	}
 
 
+	// ルーレット停止
 	if (press[1]) {
 		iRouletteState &= 0b0111;
 	}
@@ -334,7 +312,6 @@ BOOL CGame::RunRoulette() {
 		else {
 			// ルーレット停止中
 			if (iWiningRoom == 0) {
-				// くじがなくなったとき
 				dt.Draw(textX-width*i, textY, 300, 0, 0xff000000, "-");
 			}
 			else {
@@ -364,12 +341,21 @@ BOOL CGame::RunRoulette() {
 BOOL CGame::SetNumber(int mode) {
 	// 当選番号取得
 	
-	const RoomNum *wining = lottery.getNumber(mode);
+	RoomNum room;
+	if (!lottery.getNumber(room, mode)) {
+		return false;
+	}
 
-	iWiningRoom = wining->number;
-	iWiningRoomid = wining->id;
+	iWiningRoom = room.number;
+	iWiningRoomid = room.id;
 
-	return TRUE;
+	DEBUG("Room No.%4d", iWiningRoom);
+	if (iWiningRoomid == 0) {
+		DEBUG(" (%d)", iWiningRoomid);
+	}
+	DEBUG("\n");
+
+	return true;
 }
 
 
@@ -382,54 +368,65 @@ BOOL CGame::Run(HINSTANCE hinst) {
 	// ゲームメインループ
 	MSG msg;
 	BOOL bLoop=TRUE;
+
+	CTimer timer;
+	timer.Start(60);	// 60fpsで実行
+
 	while (bLoop) {
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			if (msg.message==WM_QUIT) {
-				bLoop = FALSE;
-				DEBUG("WM_QUIT\n");
-				break;
+		int frame = timer.Run();
+		for (int i=0; i<frame; i++) {
+
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+				if (msg.message==WM_QUIT) {
+					bLoop = FALSE;
+					DEBUG("WM_QUIT\n");
+					break;
+				}
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
 			}
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
 
-		// メインゲーム処理分け
-		switch (eState) {
-			case INIT:
-				// 初期化
-				if (!Init(hinst)) {
-					// 失敗
-					eState = END;
-				}
-				else {
-					// 成功
-					eState = RUN;
-				}
-				break;
+		
 
-			case RUN:
-				switch (RunRoulette()) {
-					case 0:
-						eState = RUN;
-						break;
-					case -1:
+		
+			// メインゲーム処理分け
+			switch (eState) {
+				case INIT:
+					// 初期化
+					if (!Init(hinst)) {
+						// 失敗
 						eState = END;
-						break;
-				}
-				break;
+					}
+					else {
+						// 成功
+						eState = RUN;
+					}
+					break;
 
-			case END:
-				// 終了処理
-				Clear();
-				bLoop = FALSE;
-				break;
+				case RUN:
+					switch (RunRoulette()) {
+						case 0:
+							eState = RUN;
+							break;
+						case -1:
+							eState = END;
+							break;
+					}
+					break;
 
-			default:
-				// 未定義のステート
-				DEBUG("異常終了\n");
-				return FALSE;
+				case END:
+					// 終了処理
+					Clear();
+					bLoop = FALSE;
+					break;
+
+				default:
+					// 未定義のステート
+					DEBUG("異常終了\n");
+					return FALSE;
+			}
 		}
-		Sleep(0);
+		
 	}
 
 	win.Delete();

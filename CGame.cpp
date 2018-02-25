@@ -349,11 +349,12 @@ BOOL CGame::SetNumber(int mode) {
 	iWiningRoom = room.number;
 	iWiningRoomid = room.id;
 
-	DEBUG("Room No.%4d", iWiningRoom);
 	if (iWiningRoomid == 0) {
-		DEBUG(" (%d)", iWiningRoomid);
+		DEBUG("Room No.%4d\n", iWiningRoom);
 	}
-	DEBUG("\n");
+	else {
+		DEBUG("Room No.%4d (%d)\n", iWiningRoom, iWiningRoomid);
+	}
 
 	return true;
 }
